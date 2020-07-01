@@ -2,13 +2,14 @@ interface Data {
   id: number;
   value: string;
 }
+
 const getData = () => new Promise((resolve, reject) => {
-  const data:Data[] = JSON.parse(window.localStorage.getItem('list') || '[]');
+  const data: Data[] = JSON.parse(window.localStorage.getItem('list') || '[]');
   resolve(data);
 })
 
 const updateData = ({id, value}: Data) => new Promise((resolve, reject) => {
-  const data:Data[] = JSON.parse(window.localStorage.getItem('list') || '[]');
+  const data: Data[] = JSON.parse(window.localStorage.getItem('list') || '[]');
   const currentData = data.find(v => v.id === id)
   currentData.value = value
   window.localStorage.setItem('list', JSON.stringify(data))
@@ -16,15 +17,15 @@ const updateData = ({id, value}: Data) => new Promise((resolve, reject) => {
 })
 
 const saveData = (value: string) => new Promise((resolve, reject) => {
-  const data:Data[] = JSON.parse(window.localStorage.getItem('list') || '[]');
-  const newData:Data = {id: (data.slice(-1)[0]?.id || 0) + 1, value}
+  const data: Data[] = JSON.parse(window.localStorage.getItem('list') || '[]');
+  const newData: Data = {id: (data.slice(-1)[0]?.id || 0) + 1, value}
   const news = [...data, newData]
   window.localStorage.setItem('list', JSON.stringify(news))
   resolve(news)
 })
 
 const deleteData = (id: number) => new Promise((resolve, reject) => {
-  const data:Data[] = JSON.parse(window.localStorage.getItem('list') || '[]');
+  const data: Data[] = JSON.parse(window.localStorage.getItem('list') || '[]');
   const newData: Data[] = data.filter(v => v.id !== id)
   window.localStorage.setItem('list', JSON.stringify(newData))
   resolve(newData)
@@ -75,7 +76,10 @@ $('#app').addEventListener('click', (e) => {
   if ($$('.save').includes(targetElement)) {
     const inputElement = targetElement.previousElementSibling.previousElementSibling as HTMLInputElement
     const editElement = targetElement.previousElementSibling as HTMLElement
-    updateData({ id: +targetElement.parentElement.getAttribute('data-id'), value: inputElement.value }).then((data: Data[]) => {
+    updateData({
+      id: +targetElement.parentElement.getAttribute('data-id'),
+      value: inputElement.value
+    }).then((data: Data[]) => {
       editElement.style.display = 'inline-block'
       render(data)
     })
