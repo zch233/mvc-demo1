@@ -18,10 +18,9 @@ const updateData = ({id, value}: Data) => new Promise((resolve, reject) => {
 
 const saveData = (value: string) => new Promise((resolve, reject) => {
   const data: Data[] = JSON.parse(window.localStorage.getItem('list') || '[]');
-  const newData: Data = {id: (data.slice(-1)[0]?.id || 0) + 1, value}
-  const news = [...data, newData]
-  window.localStorage.setItem('list', JSON.stringify(news))
-  resolve(news)
+  const newData = [...data, {id: (data.slice(-1)[0]?.id || 0) + 1, value}]
+  window.localStorage.setItem('list', JSON.stringify(newData))
+  resolve(newData)
 })
 
 const deleteData = (id: number) => new Promise((resolve, reject) => {
