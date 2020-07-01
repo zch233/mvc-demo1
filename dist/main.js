@@ -26,6 +26,8 @@ const deleteData = (id) => new Promise((resolve, reject) => {
 const template = `
   <div data-id="{{id}}">
     <input disabled type="text" value="{{value}}">
+    <button class="edit">编辑</button>
+    <button class="save" style="display: none;">保存</button>
     <button class="delete">删除</button>
   </div>
 `;
@@ -49,5 +51,20 @@ $('#app').addEventListener('click', (e) => {
     }
     if ($$('.delete').includes(targetElement)) {
         deleteData(+targetElement.parentElement.getAttribute('data-id')).then((data) => render(data));
+    }
+    if ($$('.edit').includes(targetElement)) {
+        const inputElement = targetElement.previousElementSibling;
+        const saveElement = targetElement.nextElementSibling;
+        inputElement.disabled = false;
+        saveElement.style.display = 'inline-block';
+        targetElement.style.display = 'none';
+    }
+    if ($$('.save').includes(targetElement)) {
+        const inputElement = targetElement.previousElementSibling.previousElementSibling;
+        const editElement = targetElement.previousElementSibling;
+        updateData({ id: +targetElement.parentElement.getAttribute('data-id'), value: inputElement.value }).then((data) => {
+            editElement.style.display = 'inline-block';
+            render(data);
+        });
     }
 });

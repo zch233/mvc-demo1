@@ -33,6 +33,8 @@ const deleteData = (id: number) => new Promise((resolve, reject) => {
 const template = `
   <div data-id="{{id}}">
     <input disabled type="text" value="{{value}}">
+    <button class="edit">编辑</button>
+    <button class="save" style="display: none;">保存</button>
     <button class="delete">删除</button>
   </div>
 `
@@ -41,15 +43,16 @@ const render = (data: Data[]) => {
 }
 
 const $: (selector: string) => Element = selector => document.querySelector(selector)
+
 const $$: (selector: string) => Element[] = selector => [...document.querySelectorAll(selector)]
 
 getData().then((data: Data[]) => render(data))
 
 $('#app').addEventListener('click', (e) => {
-  const targetElement: EventTarget = e.target
+  const targetElement = e.target as HTMLElement
 
-  if ($$('.add').includes(<Element>targetElement)) {
-    const inputElement = $('.input')
+  if ($$('.add').includes(targetElement)) {
+    const inputElement = $('.input') as HTMLInputElement
     const value = inputElement.value
     if (value === '') return
     saveData(value).then((data: Data[]) => {
@@ -57,7 +60,24 @@ $('#app').addEventListener('click', (e) => {
       render(data)
     })
   }
-  if ($$('.delete').includes(<Element>targetElement)) {
-    deleteData(+(<Element>targetElement).parentElement.getAttribute('data-id')).then((data: Data[]) => render(data))
+  if ($$('.delete').includes(targetElement)) {
+    deleteData(+targetElement.parentElement.getAttribute('data-id')).then((data: Data[]) => render(data))
+  }
+
+  if ($$('.edit').includes(targetElement)) {
+    const inputElement = targetElement.previousElementSibling as HTMLInputElement
+    const saveElement = targetElement.nextElementSibling as HTMLElement
+    inputElement.disabled = false
+    saveElement.style.display = 'inline-block'
+    targetElement.style.display = 'none'
+  }
+
+  if ($$('.save').includes(targetElement)) {
+    const inputElement = targetElement.previousElementSibling.previousElementSibling as HTMLInputElement
+    const editElement = targetElement.previousElementSibling as HTMLElement
+    updateData({ id: +targetElement.parentElement.getAttribute('data-id'), value: inputElement.value }).then((data: Data[]) => {
+      editElement.style.display = 'inline-block'
+      render(data)
+    })
   }
 })
