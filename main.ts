@@ -40,21 +40,26 @@ class Model {
     this.data = newData
     resolve(newData)
   })
-  constructor () {}
+  constructor ({data}:any) {
+    this.data = data
+  }
 }
 
 class View {
-  el: string = '#app'
-  template:string = `
-    <div data-id="{{id}}">
-      <input disabled type="text" value="{{value}}">
-      <button class="edit">编辑</button>
-      <button class="update" style="display: none;">保存</button>
-      <button class="delete">删除</button>
-    </div>
-  `
+  el: string
+  template:string
   render = (data: Data[]) => {
-    $('.content').innerHTML = data.map((item: Data) => this.template.replace('{{value}}', item.value).replace('{{id}}', item.id.toString())).join('')
+    $('.content').innerHTML = data.map((item: Data) => {
+      let html = this.template
+      // @ts-ignore
+      Object.keys(item).map(key => (html = html.replace(`{{${key}}}`, item[key])))
+      return html
+    }).join('')
+  }
+
+  constructor ({el, template}: any) {
+    this.el = el
+    this.template = template
   }
 }
 
@@ -78,18 +83,19 @@ class Controller {
     {type: 'click', selector: '.edit', fnName: 'handleEdit'},
     {type: 'click', selector: '.update', fnName: 'handleUpdate'},
   ]
-  bindEvents = () => {
+  bindEvents = (): void => {
     this.events.map((myEvent: MyEvent) => {
       $(this.view.el).addEventListener(myEvent.type, (event: Event) => {
         const targetElement = event.target as HTMLElement
         if ($$(myEvent.selector).includes(targetElement)) {
+          const fnName = myEvent.fnName
           // @ts-ignore
-          this[myEvent.fnName](targetElement)
+          this[fnName] && this[fnName](targetElement)
         }
       })
     })
   }
-  handleAdd = () => {
+  handleAdd = (targetElement: HTMLElement): void => {
     const inputElement = $('.input') as HTMLInputElement
     const value = inputElement.value
     if (value === '') return
@@ -98,7 +104,7 @@ class Controller {
       this.view.render(this.model.data)
     })
   }
-  handleDelete = (targetElement: HTMLElement) => {
+  handleDelete = (targetElement: HTMLElement): void => {
     this.model.deleteData(+targetElement.parentElement.getAttribute('data-id')).then(() => this.view.render(this.model.data))
   }
   handleEdit = (targetElement: HTMLElement) => {
@@ -108,7 +114,7 @@ class Controller {
     saveElement.style.display = 'inline-block'
     targetElement.style.display = 'none'
   }
-  handleUpdate = (targetElement: HTMLElement) => {
+  handleUpdate = (targetElement: HTMLElement): void => {
     const inputElement = targetElement.previousElementSibling.previousElementSibling as HTMLInputElement
     const editElement = targetElement.previousElementSibling as HTMLElement
     this.model.updateData({
@@ -120,8 +126,19 @@ class Controller {
     })
   }
 }
-
 new Controller({
-  view: new View(),
-  model: new Model()
+  view: new View({
+    el: '#app',
+    template: `
+      <div data-id="{{id}}">
+        <input disabled type="text" value="{{value}}">
+        <button class="edit">编辑</button>
+        <button class="update" style="display: none;">保存</button>
+        <button class="delete">删除</button>
+      </div>
+    `
+  }),
+  model: new Model({
+    data: []
+  })
 })

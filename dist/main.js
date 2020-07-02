@@ -1,7 +1,7 @@
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 class Model {
-    constructor() {
+    constructor({ data }) {
         this.getData = () => new Promise((resolve, reject) => {
             const data = JSON.parse(window.localStorage.getItem('list') || '[]');
             this.data = data;
@@ -30,22 +30,21 @@ class Model {
             this.data = newData;
             resolve(newData);
         });
+        this.data = data;
     }
 }
 class View {
-    constructor() {
-        this.el = '#app';
-        this.template = `
-    <div data-id="{{id}}">
-      <input disabled type="text" value="{{value}}">
-      <button class="edit">编辑</button>
-      <button class="update" style="display: none;">保存</button>
-      <button class="delete">删除</button>
-    </div>
-  `;
+    constructor({ el, template }) {
         this.render = (data) => {
-            $('.content').innerHTML = data.map((item) => this.template.replace('{{value}}', item.value).replace('{{id}}', item.id.toString())).join('');
+            $('.content').innerHTML = data.map((item) => {
+                let html = this.template;
+                // @ts-ignore
+                Object.keys(item).map(key => (html = html.replace(`{{${key}}}`, item[key])));
+                return html;
+            }).join('');
         };
+        this.el = el;
+        this.template = template;
     }
 }
 class Controller {
@@ -67,13 +66,14 @@ class Controller {
                 $(this.view.el).addEventListener(myEvent.type, (event) => {
                     const targetElement = event.target;
                     if ($$(myEvent.selector).includes(targetElement)) {
+                        const fnName = myEvent.fnName;
                         // @ts-ignore
-                        this[myEvent.fnName](targetElement);
+                        this[fnName] && this[fnName](targetElement);
                     }
                 });
             });
         };
-        this.handleAdd = () => {
+        this.handleAdd = (targetElement) => {
             const inputElement = $('.input');
             const value = inputElement.value;
             if (value === '')
@@ -110,6 +110,18 @@ class Controller {
     }
 }
 new Controller({
-    view: new View(),
-    model: new Model()
+    view: new View({
+        el: '#app',
+        template: `
+      <div data-id="{{id}}">
+        <input disabled type="text" value="{{value}}">
+        <button class="edit">编辑</button>
+        <button class="update" style="display: none;">保存</button>
+        <button class="delete">删除</button>
+      </div>
+    `
+    }),
+    model: new Model({
+        data: []
+    })
 });
